@@ -1,13 +1,27 @@
 Release Notes
 =============
 
-Version 0.15.dev0
+Version 0.16.dev0
 -----------------
+
+Bug fixes:
+
+* Fix `TransitionModel` number of states when last state is unreachable (#287)
+
+Other changes:
+
+* Viterbi decoding of `HMM` raises a warning if no valid path is found (#279)
+* Add option to include Nyquist frequency in `STFT` (#280)
+
+
+Version 0.15 (release date: 2017-04-25)
+---------------------------------------
 
 New features:
 
 * Streaming mode allows framewise processing of live audio input (#185)
 * Exponential linear unit (ELU) activation function (#232)
+* `DBNBeatTracker` can operate on live audio signals (#238)
 * `OnsetDetectorLL` can operate on live audio signals (#256)
 
 Bug fixes:
@@ -16,7 +30,7 @@ Bug fixes:
 * Fix tempo handling of multi-track MIDI files (#219)
 * Fix error loading unicode filenames (#223)
 * Fix ffmpeg unicode filename handling (#236)
-* Fix smoothing for peak_picking (#247)
+* Fix smoothing for `peak_picking` (#247)
 * Fix combining onsets/notes (#255)
 
 API relevant changes:

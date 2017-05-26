@@ -16,6 +16,7 @@ If you want to change this module and use it interactively, use pyximport.
 
 from __future__ import absolute_import, division, print_function
 
+import warnings
 import numpy as np
 
 cimport numpy as np
@@ -145,8 +146,12 @@ class TransitionModel(object):
         probabilities = np.asarray(probabilities)
         if not np.allclose(np.bincount(prev_states, weights=probabilities), 1):
             raise ValueError('Not a probability distribution.')
-        # convert everything into a sparse CSR matrix
-        transitions = csr_matrix((probabilities, (states, prev_states)))
+        # convert everything into a sparse CSR matrix, make sure it is square.
+        # looking through prev_states is enough, because there *must* be a
+        # transition *from* every state
+        num_states = max(prev_states) + 1
+        transitions = csr_matrix((probabilities, (states, prev_states)),
+                                 shape=(num_states, num_states))
         # convert to correct types
         states = transitions.indices.astype(np.uint32)
         pointers = transitions.indptr.astype(np.uint32)
@@ -510,6 +515,14 @@ class HiddenMarkovModel(object):
         state = np.asarray(current_viterbi).argmax()
         # set the path's probability to that of the best state
         log_probability = current_viterbi[state]
+
+        # raise warning if the sequence has -inf probability
+        if np.isinf(log_probability):
+            warnings.warn('-inf log probability during Viterbi decoding '
+                          'cannot find a valid path', RuntimeWarning)
+            # return empty path sequence
+            return np.empty(0, dtype=np.uint32), log_probability
+
         # back tracked path, a.k.a. path sequence
         path = np.empty(num_observations, dtype=np.uint32)
         # track the path backwards, start with the last frame and do not
@@ -558,10 +571,7 @@ class HiddenMarkovModel(object):
         # observation model stuff
         om = self.observation_model
         cdef uint32_t [::1] om_pointers = om.pointers
-        # TODO: check why ascontiguousarray is needed for framewise processing
-        # make sure we can iterate over the observations
-        cdef double [:, ::1] om_densities = np.ascontiguousarray(
-            np.atleast_2d(om.densities(observations)))
+        cdef double [:, ::1] om_densities = om.densities(observations)
         cdef unsigned int num_observations = len(om_densities)
 
         # reset HMM
@@ -599,7 +609,7 @@ class HiddenMarkovModel(object):
                 fwd_prev[state] = fwd[frame, state]
 
         # return the forward variables
-        return np.array(fwd)
+        return np.asarray(fwd)
 
     @cython.cdivision(True)
     @cython.boundscheck(False)

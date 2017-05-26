@@ -15,7 +15,7 @@ import glob
 import numpy as np
 
 # define version
-version = '0.15.dev0'
+version = '0.16.dev0'
 
 # define which extensions to compile
 include_dirs = [np.get_include()]
@@ -37,7 +37,7 @@ scripts = glob.glob('bin/*')
 # define the models to be included in the PyPI package
 package_data = ['models/LICENSE',
                 'models/README.rst',
-                'models/beats/2015/*',
+                'models/beats/201[56]/*',
                 'models/chords/*/*',
                 'models/chroma/*/*',
                 'models/downbeats/*/*',
